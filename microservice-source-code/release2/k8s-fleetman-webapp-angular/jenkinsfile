@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "your-docker-image-name"
+        KUBERNETES_CLUSTER = "your-kubernetes-cluster-context"
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    def app = docker.build("${DOCKER_IMAGE}:${env.BUILD_ID}")
+                }
+            }
+        }
+
+        stage('Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials-id') {
+                        app.push()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    kubectl('apply -f deployment.yaml')
+                    kubectl('apply -f service.yaml')
+                }
+            }
+        }
+    }
+}
+
+def kubectl(cmd) {
+    sh "kubectl --context ${KUBERNETES_CLUSTER} ${cmd}"
+}
