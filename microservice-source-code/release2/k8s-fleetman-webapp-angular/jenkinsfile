@@ -28,7 +28,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    kubectl('apply -f deployment.yaml')
+                    kubectl('apply -f pod.yaml')
                     kubectl('apply -f service.yaml')
                 }
             }
