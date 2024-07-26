@@ -30,12 +30,25 @@ pipeline {
                 script {
                     kubectl('apply -f pod.yaml')
                     kubectl('apply -f service.yaml')
+         // Deploy to Kubernetes
+                    echo 'Deploying to Kubernetes'
+                    sh "sed -i 's/image: positionsimulator:.*/image: positionsimulator:${env.BUILD_NUMBER}/g' k8s/position-tracker-deployment.yaml"
+                    sh "kubectl apply -f k8s/position-tracker-deployment.yaml"
+                    sh "kubectl get all"
+                    echo 'Deployment complete'
                 }
             }
         }
     }
 }
-
+stage('Code Quality') {
+            steps {
+                script {
+                    // Run SonarQube analysis
+                    sh 'mvn sonar:sonar -Dsonar.projectKey=your_project_key -Dsonar.host.url=http://localhost:9000 -Dsonar.login=your_sonarqube_token'
+                }
+            }
+        }
 def kubectl(cmd) {
     sh "kubectl --context ${KUBERNETES_CLUSTER} ${cmd}"
 }
